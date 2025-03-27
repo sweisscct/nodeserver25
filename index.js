@@ -33,6 +33,12 @@ app.get("/query", (req, res) => {
 
 // https://moodle.cct.ie/course/view.php?id=1996#section-7
 
+app.post("/form", (req, res) => {
+    if (req.body.password == "password") {
+        res.redirect("/hello");
+    }
+    res.send(`The username is: ${req.body.username} and the password is: ${req.body.password}`);
+})
 
 app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`);
