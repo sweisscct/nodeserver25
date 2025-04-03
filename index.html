@@ -36,6 +36,8 @@
             console.log(JSON.stringify(data));
             wsServer.send(JSON.stringify(data));
             newChat.value = "";
+        } else {
+            console.log("Message is blank")
         }
     }
     const sendNewChatButton = document.getElementById("send-new-chat");
@@ -43,5 +45,18 @@
         sendMessage();
     })
 
+    function displayChat(newMessage) {
+        let newText = document.createElement("p");
+        newText.innerText = `Message: ${newMessage.message}`;
+        let chatContainer = document.getElementById("chat-container");
+        chatContainer.appendChild(newText);
+    }
+
+    wsServer.onmessage = (event) => {
+        const { data } = event;
+        console.log(data);
+        displayChat(JSON.parse(data));
+    }
+    // sendNewChatButton.addEventListener("click", sendMessage())
 </script>
 </html>

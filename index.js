@@ -61,6 +61,11 @@ wsServer.on("connection", (ws) => {
     ws.on("message", (message) => {
         console.log(message);
         // process/parse
+        console.log(message.toLocaleString());
+        message = JSON.parse(message.toLocaleString());
+        wsServer.clients.forEach(client => {
+            if (client.readyState == WebSocket.OPEN) client.send(JSON.stringify(message));
+        })
         // relay the message to the other clients
     })
 })
