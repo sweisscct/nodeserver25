@@ -1,9 +1,12 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const WebSocket = require("ws");
 
 const PORT = 3000;
 app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+
+let viewCount = 0;
 
 app.get("/", (req, res) => {
     console.log("Yay, a visitor!");
@@ -16,6 +19,7 @@ app.get("/hello", (req, res) => {
 })
 
 app.get("/html", (req, res) => {
+    console.log(__dirname);
     res.sendFile("index.html", {root: __dirname});
 })
 
@@ -40,6 +44,23 @@ app.post("/form", (req, res) => {
     res.send(`The username is: ${req.body.username} and the password is: ${req.body.password}`);
 })
 
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
     console.log(`Listening on port: ${PORT}`);
 });
+
+const wsServer = new WebSocket.Server( { noServer: true });
+
+httpServer.on("upgrade", async (request, socket, head) => {
+    wsServer.handleUpgrade(request, socket, head, (ws) => {
+         wsServer.emit("connection", ws, request);
+    });
+});
+
+// Group Chat
+wsServer.on("connection", (ws) => {
+    ws.on("message", (message) => {
+        console.log(message);
+        // process/parse
+        // relay the message to the other clients
+    })
+})
