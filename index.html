@@ -25,11 +25,15 @@
     const url = `ws://localhost:${PORT}`
     const wsServer = new WebSocket(url);
 
+    const username = prompt("What is your username?");
+    localStorage.setItem("username", username);
+
     const newChat = document.getElementById("new-chat");
     function sendMessage() {
         console.log(newChat.value);
         if (newChat.value) {
             const data = {
+                username, // username: username,
                 message: newChat.value
             }
             console.log(data);
@@ -47,7 +51,7 @@
 
     function displayChat(newMessage) {
         let newText = document.createElement("p");
-        newText.innerText = `Message: ${newMessage.message}`;
+        newText.innerText = `${newMessage.username}: ${newMessage.message}`;
         let chatContainer = document.getElementById("chat-container");
         chatContainer.appendChild(newText);
     }

@@ -1,10 +1,48 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const WebSocket = require("ws");
+const passport = require("passport");
+const session = require("express-session");
+const MongoDBStore = require("connect-mongodb-session")(session);
+const mongoose = require("mongoose");
+const passportLocalMongoose = require("passport-local-mongoose");
+
+
 
 const PORT = 3000;
 app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
+
+mongoose.connect('mongodb://127.0.0.1:27017/chatApp')
+.then(conn => console.log(conn.modles));
+const Schema = mongoose.Schema;
+
+const userSchema = new Schema({
+    username: String,
+    password: String
+});
+
+userSchema.plugin(passportLocalMongoose);
+const User = mongoose.model("User", userSchema);
+
+app.use(session({
+    secret: "secret",
+    resave: false,
+    saveUninitialized: false,
+    store: new MongoDBStore({
+        mongoURL: '127.0.0.1:27017',
+        collection: 'chatApp'
+    }, err => console.log(err))
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+const LocalStrategy = require('passport-local').Strategy;
+passport.use(new LocalStrategy(User.authenticate()));
 
 let viewCount = 0;
 
@@ -12,6 +50,41 @@ app.get("/", (req, res) => {
     console.log("Yay, a visitor!");
     // console.log(req);
     res.send("Welcome to the web server!");
+})
+
+app.get("/create-account", (req, res) => {
+    if (req.isAuthenticated()) res.redirect("/chat");
+    res.sendFile("create-account.html", {root: __dirname});
+})
+
+app.post("/create-account", (req, res) => {
+    if (req.isAuthenticated()) res.redirect("/chat");
+    User.register(new User({
+        username: req.body.username
+    }), req.body.password, (err, user) => {
+        if (err) {
+            console.log(err);
+            res.send("Error");
+        }
+        passport.authenticate('local')(req, res, () => {
+            res.redirect("/chat");
+        })
+    })
+})
+
+app.get("/login", (req, res) => {
+    if (req.isAuthenticated()) res.redirect("/chat");
+    res.sendFile("login.html", {root: __dirname});
+})
+
+app.post("/login", passport.authenticate('local', {failureRedirect: "/login", failureFlash: false}), (req, res) => {
+    res.redirect("/chat");
+})
+
+app.get("/chat", (req, res) => {
+    if (!req.isAuthenticated()) res.redirect("/login");
+    res.sendFile("chat.html", {root: __dirname});
+        
 })
 
 app.get("/hello", (req, res) => {
